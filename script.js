@@ -1,6 +1,10 @@
 /* ==========================================================================
    20/10 VIETNAMESE WOMEN'S DAY GREETING CARD - INTERACTIVE LOGIC
    With Creator Mode (Full Customization) & Recipient Mode (Clean View-Only)
+   Features:
+   - Feature 1: Portrait Photo inside top circular frame
+   - Feature 2: Flying Memory Photos (up to 5) blooming on card open
+   - Feature 3: Super Short Link via Firebase Realtime Database (?id=xxxxx)
    ========================================================================== */
 
 // ==========================================================================
@@ -9,7 +13,7 @@
 const FIREBASE_DB_URL = "https://snettech-cloud-default-rtdb.firebaseio.com/";
 
 document.addEventListener('DOMContentLoaded', () => {
-  // DOM Elements
+  // DOM Elements - Card & Stage
   const cardStage = document.getElementById('card-stage');
   const cardWrapper = document.getElementById('card-wrapper');
   const greetingCard = document.getElementById('greeting-card');
@@ -23,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const musicToggle = document.getElementById('music-toggle');
   const musicHint = document.getElementById('music-hint');
   
-  // Card Display Elements
+  // Card Text Display Elements
   const displayPrefix = document.getElementById('display-prefix');
   const displayRecipient = document.getElementById('display-recipient');
   const displaySender = document.getElementById('display-sender');
@@ -61,23 +65,33 @@ document.addEventListener('DOMContentLoaded', () => {
   const shortenBtnText = document.getElementById('shorten-btn-text');
   const templateBtns = document.querySelectorAll('.btn-template');
   
-  // Commemorative Photo Elements
-  const defaultArtworkWrap = document.getElementById('default-artwork-wrap');
-  const cardPhotoWrap = document.getElementById('card-photo-wrap');
-  const cardPhotoImg = document.getElementById('card-photo-img');
-  const cardPhotoCaption = document.getElementById('card-photo-caption');
-  const polaroidFrame = document.getElementById('polaroid-frame');
-  const inputPhotoFile = document.getElementById('input-photo-file');
-  const photoDropzone = document.getElementById('photo-dropzone');
-  const photoPreviewBox = document.getElementById('photo-preview-box');
-  const previewImg = document.getElementById('preview-img');
-  const btnRemovePhoto = document.getElementById('btn-remove-photo');
-  const photoCaptionGroup = document.getElementById('photo-caption-group');
-  const inputPhotoCaption = document.getElementById('input-photo-caption');
+  // Feature 1: Portrait Photo Elements
+  const portraitCircleFrame = document.getElementById('portrait-circle-frame');
+  const cardPortraitImg = document.getElementById('card-portrait-img');
+  const cardBouquetEmoji = document.getElementById('card-bouquet-emoji');
+  const inputPortraitFile = document.getElementById('input-portrait-file');
+  const portraitDropzone = document.getElementById('portrait-dropzone');
+  const portraitPreviewBox = document.getElementById('portrait-preview-box');
+  const portraitPreviewImg = document.getElementById('portrait-preview-img');
+  const btnRemovePortrait = document.getElementById('btn-remove-portrait');
+
+  // Feature 2: Flying Memory Photos Elements
+  const flyingMemoriesLayer = document.getElementById('flying-memories-layer');
+  const replayMemoriesBtn = document.getElementById('replay-memories-btn');
+  const inputMemoriesFile = document.getElementById('input-memories-file');
+  const memoriesDropzone = document.getElementById('memories-dropzone');
+  const memoriesCounter = document.getElementById('memories-counter');
+  const memoriesThumbnailsGrid = document.getElementById('memories-thumbnails-grid');
+
+  // Lightbox Modal Elements
   const lightboxModal = document.getElementById('lightbox-modal');
   const lightboxImg = document.getElementById('lightbox-img');
   const lightboxCaption = document.getElementById('lightbox-caption');
   const lightboxClose = document.getElementById('lightbox-close');
+
+  // Toast Notification Elements
+  const toastNotify = document.getElementById('toast-notify');
+  const toastText = document.getElementById('toast-text');
 
   // Application State
   let isCardOpen = false;
@@ -86,7 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentWishIndex = 0;
   let totalHearts = 99;
   let isViewMode = false;
-  let currentPhotoBase64 = null;
+  let currentPortraitBase64 = null;
+  let currentMemories = []; // Array of Base64 JPEG strings (max 5)
+  let flyingTimeout = null;
 
   /* ==========================================================================
      CURATED WISHES DATABASE
@@ -183,39 +199,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /* ==========================================================================
-     UTF-8 BASE64 SAFE ENCODING & DECODING
-     ========================================================================== */
-  function encodeCardData(obj) {
-    try {
-      const jsonStr = JSON.stringify(obj);
-      // Safe utf-8 base64
-      const base64 = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => {
-        return String.fromCharCode('0x' + p1);
-      }));
-      return encodeURIComponent(base64);
-    } catch (e) {
-      console.error('Encoding error:', e);
-      return '';
-    }
-  }
-
-  function decodeCardData(encodedStr) {
-    try {
-      const base64 = decodeURIComponent(encodedStr);
-      const jsonStr = decodeURIComponent(Array.prototype.map.call(atob(base64), (c) => {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-      return JSON.parse(jsonStr);
-    } catch (e) {
-      console.warn('Decoding error:', e);
-      return null;
-    }
-  }
-
-  /* ==========================================================================
      IMAGE RESIZING & COMPRESSION HELPER (CANVAS)
      ========================================================================== */
-  function compressImageFile(file, maxWidth = 800, maxHeight = 800, quality = 0.78) {
+  function compressImageFile(file, maxWidth = 450, maxHeight = 450, quality = 0.75) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -306,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.body.classList.add('view-mode');
     }
 
-    // 0. Check Firebase Short ID (?id=k9x2)
+    // 0. Primary: Firebase Short ID (?id=k9x2)
     const shortId = params.get('id');
     if (shortId) {
       isViewMode = true;
@@ -316,8 +302,10 @@ document.addEventListener('DOMContentLoaded', () => {
       loadCardFromFirebase(shortId).then((cardData) => {
         if (cardData) {
           applyCardData(cardData);
+          showToast('💌 Tấm thiệp đã sẵn sàng dành riêng cho bạn!');
         } else {
           loadCategoryTemplate('friends', 0);
+          showToast('⚠️ Không tìm thấy thiệp, hiển thị mẫu mặc định!');
         }
       }).catch((err) => {
         console.warn('Firebase load error:', err);
@@ -326,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // 1. Template-based compact URL (Siêu ngắn: ?t=crush&to=Lan+Anh&from=Nam&view=1)
+    // 1. Template-based compact URL (?t=crush&to=Lan+Anh&from=Nam&view=1)
     const tplCat = params.get('t');
     if (tplCat && wishLibrary[tplCat]) {
       const tplIdx = parseInt(params.get('i') || '0', 10);
@@ -360,16 +348,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // 3. Fallback: Check legacy Base64 ?card=...
-    const cardParam = params.get('card');
-    if (cardParam) {
-      const decoded = decodeCardData(cardParam);
-      if (decoded) {
-        applyCardData(decoded);
-        return;
-      }
-    }
-
     // Default: Creator mode with initial template
     loadCategoryTemplate('friends', 0);
     syncModalWithCurrentCard();
@@ -398,7 +376,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const match = findMatchingPreset(cardData.prefix, cardData.highlight, cardData.lines);
 
     if (match) {
-      // Super short preset link (~60 characters)
       url.searchParams.set('t', match.cat);
       if (match.index > 0) url.searchParams.set('i', match.index.toString());
       url.searchParams.set('to', cardData.recipient);
@@ -409,7 +386,6 @@ document.addEventListener('DOMContentLoaded', () => {
         url.searchParams.set('pre', cardData.prefix);
       }
     } else {
-      // Clean query parameters (much shorter than Base64)
       url.searchParams.set('to', cardData.recipient);
       if (cardData.sender && cardData.sender !== 'Người luôn chúc phúc cho bạn ✨') {
         url.searchParams.set('from', cardData.sender);
@@ -425,6 +401,9 @@ document.addEventListener('DOMContentLoaded', () => {
     return url.toString();
   }
 
+  /* ==========================================================================
+     APPLY CARD DATA TO UI & CAROUSEL
+     ========================================================================== */
   function applyCardData(data) {
     if (data.prefix) displayPrefix.textContent = data.prefix;
     if (data.recipient) displayRecipient.textContent = data.recipient;
@@ -434,29 +413,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (data.sender) displaySender.textContent = data.sender;
 
-    // Handle commemorative photo
-    if (data.photo) {
-      currentPhotoBase64 = data.photo;
-      if (cardPhotoImg) cardPhotoImg.src = data.photo;
-      if (cardPhotoCaption) cardPhotoCaption.textContent = data.photoCaption || '';
-      if (cardPhotoWrap) cardPhotoWrap.style.display = 'flex';
-      if (defaultArtworkWrap) defaultArtworkWrap.style.display = 'none';
+    // Feature 1: Handle Portrait photo
+    if (data.portrait) {
+      currentPortraitBase64 = data.portrait;
+      if (cardPortraitImg) {
+        cardPortraitImg.src = data.portrait;
+        cardPortraitImg.style.display = 'block';
+      }
+      if (cardBouquetEmoji) cardBouquetEmoji.style.display = 'none';
 
-      // Sync modal photo preview
-      if (previewImg) previewImg.src = data.photo;
-      if (photoPreviewBox) photoPreviewBox.style.display = 'flex';
-      if (photoDropzone) photoDropzone.style.display = 'none';
-      if (photoCaptionGroup) photoCaptionGroup.style.display = 'flex';
-      if (inputPhotoCaption) inputPhotoCaption.value = data.photoCaption || '';
+      // Sync modal portrait preview
+      if (portraitPreviewImg) portraitPreviewImg.src = data.portrait;
+      if (portraitPreviewBox) portraitPreviewBox.style.display = 'flex';
+      if (portraitDropzone) portraitDropzone.style.display = 'none';
     } else {
-      currentPhotoBase64 = null;
-      if (cardPhotoWrap) cardPhotoWrap.style.display = 'none';
-      if (defaultArtworkWrap) defaultArtworkWrap.style.display = 'flex';
-      if (cardPhotoCaption) cardPhotoCaption.textContent = '';
+      currentPortraitBase64 = null;
+      if (cardPortraitImg) {
+        cardPortraitImg.src = '';
+        cardPortraitImg.style.display = 'none';
+      }
+      if (cardBouquetEmoji) cardBouquetEmoji.style.display = 'block';
 
-      if (photoPreviewBox) photoPreviewBox.style.display = 'none';
-      if (photoDropzone) photoDropzone.style.display = 'flex';
-      if (photoCaptionGroup) photoCaptionGroup.style.display = 'none';
+      if (portraitPreviewBox) portraitPreviewBox.style.display = 'none';
+      if (portraitDropzone) portraitDropzone.style.display = 'flex';
+    }
+
+    // Feature 2: Handle Memory photos
+    if (data.memories && Array.isArray(data.memories) && data.memories.length > 0) {
+      currentMemories = data.memories.slice(0, 5);
+      renderMemoriesThumbnails();
+      if (replayMemoriesBtn) replayMemoriesBtn.style.display = 'inline-flex';
+    } else {
+      currentMemories = [];
+      renderMemoriesThumbnails();
+      if (replayMemoriesBtn) replayMemoriesBtn.style.display = 'none';
     }
 
     // Sync input fields in modal if in creator mode
@@ -465,6 +455,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (inputHighlight && data.highlight) inputHighlight.value = data.highlight.replace(/^"|"$/g, '');
     if (inputPoetry && data.lines) inputPoetry.value = data.lines.join('\n');
     if (inputSender && data.sender) inputSender.value = data.sender;
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 
   function syncModalWithCurrentCard() {
@@ -573,7 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ==========================================================================
-     CARD OPEN & CLOSE ANIMATION
+     CARD OPEN & CLOSE ANIMATION + TRIGGER MEMORIES
      ========================================================================== */
   function toggleCard(forceState) {
     const newState = (forceState !== undefined) ? forceState : !isCardOpen;
@@ -591,6 +583,11 @@ document.addEventListener('DOMContentLoaded', () => {
       triggerCardOpenCelebration();
       showToast('💌 Chúc mừng ngày Phụ Nữ Việt Nam 20/10!');
 
+      // Trigger Feature 2: Flying memories floating out
+      if (currentMemories && currentMemories.length > 0) {
+        triggerFlyingMemories();
+      }
+
       // Smooth subtle auto-scroll on mobile so both panels stay comfortably in viewport
       if (window.innerWidth <= 768 && cardStage) {
         setTimeout(() => {
@@ -601,6 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (cardStage) cardStage.classList.remove('stage-opened');
       if (cardWrapper) cardWrapper.classList.remove('opened');
       openBtnText.textContent = 'MỞ THIỆP CHÚC MỪNG';
+      if (flyingMemoriesLayer) flyingMemoriesLayer.innerHTML = '';
     }
   }
 
@@ -611,6 +609,55 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   if (flapFront) {
     flapFront.addEventListener('click', () => toggleCard(true));
+  }
+
+  /* ==========================================================================
+     FLYING MEMORIES ANIMATION ENGINE (FEATURE 2)
+     ========================================================================== */
+  function triggerFlyingMemories() {
+    if (!flyingMemoriesLayer || currentMemories.length === 0) return;
+
+    if (flyingTimeout) clearTimeout(flyingTimeout);
+    flyingMemoriesLayer.innerHTML = '';
+
+    currentMemories.forEach((imgBase64, idx) => {
+      const polaroid = document.createElement('div');
+      polaroid.className = `flying-polaroid pos-${idx % 5}`;
+      polaroid.style.animationDelay = `${idx * 0.22}s`;
+      polaroid.title = 'Chạm để phóng to ảnh ✨';
+
+      const pin = document.createElement('span');
+      pin.className = 'flying-polaroid-pin';
+      pin.textContent = '🌸';
+
+      const img = document.createElement('img');
+      img.src = imgBase64;
+      img.alt = `Kỷ niệm ngọt ngào #${idx + 1}`;
+
+      polaroid.appendChild(pin);
+      polaroid.appendChild(img);
+
+      // Lightbox click on polaroid
+      polaroid.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openLightbox(imgBase64, `Kỷ niệm ngọt ngào #${idx + 1} 💖`);
+      });
+
+      flyingMemoriesLayer.appendChild(polaroid);
+    });
+
+    // Clear after animation finishes so layer doesn't obstruct anything
+    flyingTimeout = setTimeout(() => {
+      if (flyingMemoriesLayer) flyingMemoriesLayer.innerHTML = '';
+    }, 6200);
+  }
+
+  if (replayMemoriesBtn) {
+    replayMemoriesBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      triggerFlyingMemories();
+      showToast('📸 Đang phát lại những khoảnh khắc kỷ niệm...');
+    });
   }
 
   /* ==========================================================================
@@ -766,7 +813,200 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Action: Create card and generate share link
+  /* ==========================================================================
+     FEATURE 1: PORTRAIT PHOTO UPLOAD & PREVIEW
+     ========================================================================== */
+  if (portraitDropzone && inputPortraitFile) {
+    portraitDropzone.addEventListener('click', () => {
+      inputPortraitFile.click();
+    });
+
+    inputPortraitFile.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        showToast('⚠️ Vui lòng chọn tệp hình ảnh!');
+        return;
+      }
+
+      try {
+        showToast('⏳ Đang tối ưu ảnh chân dung...');
+        const base64 = await compressImageFile(file, 350, 350, 0.78);
+        currentPortraitBase64 = base64;
+
+        // Preview in modal
+        if (portraitPreviewImg) portraitPreviewImg.src = base64;
+        if (portraitPreviewBox) portraitPreviewBox.style.display = 'flex';
+        if (portraitDropzone) portraitDropzone.style.display = 'none';
+
+        // Update live card
+        if (cardPortraitImg) {
+          cardPortraitImg.src = base64;
+          cardPortraitImg.style.display = 'block';
+        }
+        if (cardBouquetEmoji) cardBouquetEmoji.style.display = 'none';
+
+        showToast('👤 Đã thêm ảnh chân dung vào khung tròn thiệp!');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      } catch (err) {
+        console.error('Portrait upload error:', err);
+        showToast('❌ Không thể tải ảnh, vui lòng thử lại!');
+      }
+    });
+  }
+
+  if (btnRemovePortrait) {
+    btnRemovePortrait.addEventListener('click', () => {
+      currentPortraitBase64 = null;
+      if (inputPortraitFile) inputPortraitFile.value = '';
+      if (portraitPreviewBox) portraitPreviewBox.style.display = 'none';
+      if (portraitDropzone) portraitDropzone.style.display = 'flex';
+
+      if (cardPortraitImg) {
+        cardPortraitImg.src = '';
+        cardPortraitImg.style.display = 'none';
+      }
+      if (cardBouquetEmoji) cardBouquetEmoji.style.display = 'block';
+
+      showToast('🗑️ Đã gỡ ảnh chân dung');
+    });
+  }
+
+  // Lightbox click on circular portrait frame
+  if (portraitCircleFrame) {
+    portraitCircleFrame.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (currentPortraitBase64) {
+        openLightbox(currentPortraitBase64, 'Ảnh chân dung người thương 🌸');
+      }
+    });
+  }
+
+  /* ==========================================================================
+     FEATURE 2: MEMORY PHOTOS UPLOAD (MAX 5) & THUMBNAILS
+     ========================================================================== */
+  function renderMemoriesThumbnails() {
+    if (!memoriesThumbnailsGrid) return;
+    memoriesThumbnailsGrid.innerHTML = '';
+
+    if (currentMemories.length === 0) {
+      memoriesThumbnailsGrid.style.display = 'none';
+      if (memoriesDropzone) memoriesDropzone.style.display = 'flex';
+      if (memoriesCounter) memoriesCounter.textContent = '0/5 ảnh';
+      if (replayMemoriesBtn) replayMemoriesBtn.style.display = 'none';
+      return;
+    }
+
+    memoriesThumbnailsGrid.style.display = 'flex';
+    if (memoriesCounter) memoriesCounter.textContent = `${currentMemories.length}/5 ảnh`;
+
+    if (currentMemories.length >= 5) {
+      if (memoriesDropzone) memoriesDropzone.style.display = 'none';
+    } else {
+      if (memoriesDropzone) memoriesDropzone.style.display = 'flex';
+    }
+
+    if (replayMemoriesBtn) replayMemoriesBtn.style.display = 'inline-flex';
+
+    currentMemories.forEach((imgBase64, idx) => {
+      const item = document.createElement('div');
+      item.className = 'memory-thumb-item';
+
+      const img = document.createElement('img');
+      img.src = imgBase64;
+      img.alt = `Ảnh kỷ niệm ${idx + 1}`;
+      img.addEventListener('click', () => {
+        openLightbox(imgBase64, `Kỷ niệm ngọt ngào #${idx + 1} 💖`);
+      });
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'btn-del-memory';
+      delBtn.innerHTML = '&times;';
+      delBtn.title = 'Xóa ảnh này';
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentMemories.splice(idx, 1);
+        renderMemoriesThumbnails();
+        showToast('🗑️ Đã xóa 1 ảnh kỷ niệm');
+      });
+
+      item.appendChild(img);
+      item.appendChild(delBtn);
+      memoriesThumbnailsGrid.appendChild(item);
+    });
+  }
+
+  if (memoriesDropzone && inputMemoriesFile) {
+    memoriesDropzone.addEventListener('click', () => {
+      if (currentMemories.length >= 5) {
+        showToast('⚠️ Đã đủ tối đa 5 ảnh kỷ niệm!');
+        return;
+      }
+      inputMemoriesFile.click();
+    });
+
+    inputMemoriesFile.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+
+      const remainingSlots = 5 - currentMemories.length;
+      if (remainingSlots <= 0) {
+        showToast('⚠️ Bạn đã chọn đủ tối đa 5 ảnh kỷ niệm!');
+        return;
+      }
+
+      const filesToProcess = files.slice(0, remainingSlots);
+      if (files.length > remainingSlots) {
+        showToast(`💡 Chỉ lấy thêm ${remainingSlots} ảnh để đạt tối đa 5 ảnh!`);
+      }
+
+      showToast(`⏳ Đang tối ưu ${filesToProcess.length} ảnh kỷ niệm...`);
+
+      for (const file of filesToProcess) {
+        if (!file.type.startsWith('image/')) continue;
+        try {
+          const base64 = await compressImageFile(file, 450, 450, 0.72);
+          currentMemories.push(base64);
+        } catch (err) {
+          console.error('Error compressing memory photo:', err);
+        }
+      }
+
+      inputMemoriesFile.value = '';
+      renderMemoriesThumbnails();
+      showToast(`📸 Đã thêm bộ ảnh kỷ niệm (${currentMemories.length}/5 ảnh)!`);
+    });
+  }
+
+  /* ==========================================================================
+     LIGHTBOX MODAL FOR HIGH-RES PREVIEW
+     ========================================================================== */
+  function openLightbox(src, caption = '') {
+    if (!lightboxModal || !lightboxImg) return;
+    lightboxImg.src = src;
+    if (lightboxCaption) lightboxCaption.textContent = caption;
+    lightboxModal.classList.add('active');
+  }
+
+  function closeLightbox() {
+    if (lightboxModal) lightboxModal.classList.remove('active');
+  }
+
+  if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
+  if (lightboxModal) {
+    lightboxModal.addEventListener('click', (e) => {
+      if (e.target === lightboxModal) closeLightbox();
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeLightbox();
+  });
+
+  /* ==========================================================================
+     ACTION: CREATE CARD & GENERATE SHORT FIREBASE LINK
+     ========================================================================== */
   if (btnCreateCard) {
     btnCreateCard.addEventListener('click', async () => {
       const prefix = inputPrefix.value.trim() || 'Thân gửi:';
@@ -801,14 +1041,17 @@ document.addEventListener('DOMContentLoaded', () => {
         highlight: `"${highlight}"`,
         lines: poetryLines,
         sender: sender,
-        photo: currentPhotoBase64 || null,
-        photoCaption: inputPhotoCaption ? inputPhotoCaption.value.trim() : ''
+        portrait: currentPortraitBase64 || null,
+        memories: currentMemories || []
       };
 
       // 1. Update the card live
       applyCardData(cardData);
 
-      // 2. Try saving to Firebase Realtime Database for super-short link (?id=xxxx)
+      // 2. Save to Firebase Realtime Database for super-short link (?id=xxxx)
+      btnCreateCard.disabled = true;
+      btnCreateCard.innerHTML = '<span>⏳ Đang lưu & tạo link ngắn...</span>';
+
       let finalUrl = '';
       if (FIREBASE_DB_URL && FIREBASE_DB_URL.trim() !== '') {
         try {
@@ -819,11 +1062,15 @@ document.addEventListener('DOMContentLoaded', () => {
             finalUrl = `${currentUrl.origin}${currentUrl.pathname}?id=${shortId}`;
           }
         } catch (err) {
-          console.warn('Firebase save failed, falling back to compact URL:', err);
+          console.error('Firebase save failed:', err);
         }
       }
 
-      // 3. Fallback: Compact URL if Firebase not yet configured
+      btnCreateCard.disabled = false;
+      btnCreateCard.innerHTML = '<i data-lucide="share-2"></i> Tạo & Lấy Link Gửi Bạn Bè';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+
+      // 3. Fallback: Compact URL if Firebase had an unexpected issue
       if (!finalUrl) {
         finalUrl = buildCompactShareUrl(cardData);
       }
@@ -841,7 +1088,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 1-Click Shorten URL via is.gd API
+  // 1-Click Shorten URL via is.gd API (optional further shortener)
   if (btnShortenUrl) {
     btnShortenUrl.addEventListener('click', async () => {
       const currentLink = generatedUrlInput.value.trim();
@@ -852,9 +1099,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Check if testing on localhost
       if (currentLink.includes('localhost') || currentLink.includes('127.0.0.1')) {
-        showToast('💡 Link hiện tại đã rất gọn (~60 ký tự)! Khi đưa lên GitHub Pages, nút này sẽ rút gọn về https://is.gd/xxx siêu ngắn nhé.');
+        showToast('💡 Link hiện tại đã rất gọn (~50 ký tự)! Khi đưa lên GitHub Pages, nút này có thể rút gọn thêm nữa nhé.');
         return;
       }
 
@@ -876,7 +1122,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         console.warn('Shorten API error:', err);
         if (shortenBtnText) shortenBtnText.textContent = 'Rút gọn link';
-        showToast('💡 Link gốc của bạn đã rất ngắn gọn và sẵn sàng để gửi!');
+        showToast('💡 Link Firebase của bạn đã rất ngắn gọn (~50 ký tự) và sẵn sàng để gửi!');
       }
     });
   }
@@ -931,107 +1177,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     COMMEMORATIVE PHOTO UPLOAD & LIGHTBOX ZOOM HANDLERS
-     ========================================================================== */
-  if (photoDropzone && inputPhotoFile) {
-    photoDropzone.addEventListener('click', () => {
-      inputPhotoFile.click();
-    });
-
-    inputPhotoFile.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      if (!file.type.startsWith('image/')) {
-        showToast('⚠️ Vui lòng chọn tệp hình ảnh!');
-        return;
-      }
-
-      try {
-        showToast('⏳ Đang tối ưu hình ảnh...');
-        const base64 = await compressImageFile(file, 800, 800, 0.78);
-        currentPhotoBase64 = base64;
-
-        // Preview in modal
-        if (previewImg) previewImg.src = base64;
-        if (photoPreviewBox) photoPreviewBox.style.display = 'flex';
-        if (photoDropzone) photoDropzone.style.display = 'none';
-        if (photoCaptionGroup) photoCaptionGroup.style.display = 'flex';
-
-        // Update live card
-        if (cardPhotoImg) cardPhotoImg.src = base64;
-        if (cardPhotoWrap) cardPhotoWrap.style.display = 'flex';
-        if (defaultArtworkWrap) defaultArtworkWrap.style.display = 'none';
-
-        // Sync caption
-        const caption = inputPhotoCaption ? inputPhotoCaption.value.trim() : '';
-        if (cardPhotoCaption) cardPhotoCaption.textContent = caption;
-
-        showToast('📸 Đã thêm ảnh kỷ niệm vào thiệp!');
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-      } catch (err) {
-        console.error('Image compression error:', err);
-        showToast('❌ Không thể tải ảnh, vui lòng thử ảnh khác!');
-      }
-    });
-  }
-
-  // Live photo caption update
-  if (inputPhotoCaption && cardPhotoCaption) {
-    inputPhotoCaption.addEventListener('input', () => {
-      cardPhotoCaption.textContent = inputPhotoCaption.value.trim();
-    });
-  }
-
-  // Remove photo button
-  if (btnRemovePhoto) {
-    btnRemovePhoto.addEventListener('click', () => {
-      currentPhotoBase64 = null;
-      if (inputPhotoFile) inputPhotoFile.value = '';
-      if (photoPreviewBox) photoPreviewBox.style.display = 'none';
-      if (photoDropzone) photoDropzone.style.display = 'flex';
-      if (photoCaptionGroup) photoCaptionGroup.style.display = 'none';
-      if (inputPhotoCaption) inputPhotoCaption.value = '';
-
-      if (cardPhotoWrap) cardPhotoWrap.style.display = 'none';
-      if (defaultArtworkWrap) defaultArtworkWrap.style.display = 'flex';
-      if (cardPhotoCaption) cardPhotoCaption.textContent = '';
-      showToast('🗑️ Đã gỡ ảnh kỷ niệm');
-    });
-  }
-
-  // Lightbox Zoom on clicking the photo in the card
-  if (polaroidFrame) {
-    polaroidFrame.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (!currentPhotoBase64) return;
-      if (lightboxImg) lightboxImg.src = currentPhotoBase64;
-      if (lightboxCaption && cardPhotoCaption) {
-        lightboxCaption.textContent = cardPhotoCaption.textContent;
-      }
-      if (lightboxModal) lightboxModal.classList.add('active');
-    });
-  }
-
-  if (lightboxClose) {
-    lightboxClose.addEventListener('click', () => {
-      if (lightboxModal) lightboxModal.classList.remove('active');
-    });
-  }
-
-  if (lightboxModal) {
-    lightboxModal.addEventListener('click', (e) => {
-      if (e.target === lightboxModal) {
-        lightboxModal.classList.remove('active');
-      }
-    });
-  }
-
-  /* ==========================================================================
      TOAST NOTIFICATION HELPER
      ========================================================================== */
   let toastTimer = null;
   function showToast(msg) {
+    if (!toastText || !toastNotify) return;
     if (toastTimer) clearTimeout(toastTimer);
     toastText.textContent = msg;
     toastNotify.classList.add('active');
@@ -1044,110 +1194,112 @@ document.addEventListener('DOMContentLoaded', () => {
      FALLING PETALS & SPARKLES CANVAS ENGINE
      ========================================================================== */
   const canvas = document.getElementById('petals-canvas');
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas ? canvas.getContext('2d') : null;
 
-  let width = (canvas.width = window.innerWidth);
-  let height = (canvas.height = window.innerHeight);
+  if (canvas && ctx) {
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
 
-  window.addEventListener('resize', () => {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-  });
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
 
-  const petals = [];
-  const TOTAL_PETALS = Math.min(40, Math.floor(window.innerWidth / 26));
+    const petals = [];
+    const TOTAL_PETALS = Math.min(40, Math.floor(window.innerWidth / 26));
 
-  class Petal {
-    constructor() {
-      this.reset(true);
-    }
+    class Petal {
+      constructor() {
+        this.reset(true);
+      }
 
-    reset(initial = false) {
-      this.x = Math.random() * width;
-      this.y = initial ? Math.random() * height : -20;
-      this.size = Math.random() * 12 + 10;
-      this.speedY = Math.random() * 1.2 + 0.8;
-      this.speedX = Math.random() * 0.8 - 0.4;
-      this.rotation = Math.random() * 360;
-      this.rotationSpeed = (Math.random() - 0.5) * 1.5;
-      this.flip = Math.random() * Math.PI;
-      this.flipSpeed = Math.random() * 0.03 + 0.01;
-      this.swayAngle = Math.random() * Math.PI * 2;
-      this.swaySpeed = Math.random() * 0.02 + 0.01;
-      this.swayRadius = Math.random() * 1.8 + 0.6;
-      this.opacity = Math.random() * 0.45 + 0.4;
+      reset(initial = false) {
+        this.x = Math.random() * width;
+        this.y = initial ? Math.random() * height : -20;
+        this.size = Math.random() * 12 + 10;
+        this.speedY = Math.random() * 1.2 + 0.8;
+        this.speedX = Math.random() * 0.8 - 0.4;
+        this.rotation = Math.random() * 360;
+        this.rotationSpeed = (Math.random() - 0.5) * 1.5;
+        this.flip = Math.random() * Math.PI;
+        this.flipSpeed = Math.random() * 0.03 + 0.01;
+        this.swayAngle = Math.random() * Math.PI * 2;
+        this.swaySpeed = Math.random() * 0.02 + 0.01;
+        this.swayRadius = Math.random() * 1.8 + 0.6;
+        this.opacity = Math.random() * 0.45 + 0.4;
 
-      const styles = [
-        { color1: '#ffb3c6', color2: '#ff85a1', type: 'cherry' },
-        { color1: '#ff758f', color2: '#c9184a', type: 'rose' },
-        { color1: '#fff0f3', color2: '#ffccd5', type: 'pale' },
-        { color1: '#ffe66d', color2: '#d4af37', type: 'sparkle' }
-      ];
-      this.style = styles[Math.floor(Math.random() * styles.length)];
-    }
+        const styles = [
+          { color1: '#ffb3c6', color2: '#ff85a1', type: 'cherry' },
+          { color1: '#ff758f', color2: '#c9184a', type: 'rose' },
+          { color1: '#fff0f3', color2: '#ffccd5', type: 'pale' },
+          { color1: '#ffe66d', color2: '#d4af37', type: 'sparkle' }
+        ];
+        this.style = styles[Math.floor(Math.random() * styles.length)];
+      }
 
-    update() {
-      this.y += this.speedY;
-      this.swayAngle += this.swaySpeed;
-      this.x += Math.sin(this.swayAngle) * this.swayRadius + this.speedX;
-      this.rotation += this.rotationSpeed;
-      this.flip += this.flipSpeed;
+      update() {
+        this.y += this.speedY;
+        this.swayAngle += this.swaySpeed;
+        this.x += Math.sin(this.swayAngle) * this.swayRadius + this.speedX;
+        this.rotation += this.rotationSpeed;
+        this.flip += this.flipSpeed;
 
-      if (this.y > height + 25 || this.x < -40 || this.x > width + 40) {
-        this.reset();
+        if (this.y > height + 25 || this.x < -40 || this.x > width + 40) {
+          this.reset();
+        }
+      }
+
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate((this.rotation * Math.PI) / 180);
+        ctx.scale(Math.cos(this.flip), 1);
+        ctx.globalAlpha = this.opacity;
+
+        if (this.style.type === 'sparkle') {
+          ctx.fillStyle = '#ffd166';
+          ctx.beginPath();
+          ctx.arc(0, 0, this.size * 0.22, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          const gradient = ctx.createLinearGradient(-this.size / 2, -this.size / 2, this.size / 2, this.size / 2);
+          gradient.addColorStop(0, this.style.color1);
+          gradient.addColorStop(1, this.style.color2);
+
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.moveTo(0, -this.size * 0.7);
+          ctx.bezierCurveTo(this.size * 0.6, -this.size * 0.7, this.size * 0.8, this.size * 0.3, 0, this.size * 0.9);
+          ctx.bezierCurveTo(-this.size * 0.8, this.size * 0.3, -this.size * 0.6, -this.size * 0.7, 0, -this.size * 0.7);
+          ctx.fill();
+
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(0, -this.size * 0.5);
+          ctx.lineTo(0, this.size * 0.6);
+          ctx.stroke();
+        }
+
+        ctx.restore();
       }
     }
 
-    draw() {
-      ctx.save();
-      ctx.translate(this.x, this.y);
-      ctx.rotate((this.rotation * Math.PI) / 180);
-      ctx.scale(Math.cos(this.flip), 1);
-      ctx.globalAlpha = this.opacity;
+    for (let i = 0; i < TOTAL_PETALS; i++) {
+      petals.push(new Petal());
+    }
 
-      if (this.style.type === 'sparkle') {
-        ctx.fillStyle = '#ffd166';
-        ctx.beginPath();
-        ctx.arc(0, 0, this.size * 0.22, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        const gradient = ctx.createLinearGradient(-this.size / 2, -this.size / 2, this.size / 2, this.size / 2);
-        gradient.addColorStop(0, this.style.color1);
-        gradient.addColorStop(1, this.style.color2);
-
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.moveTo(0, -this.size * 0.7);
-        ctx.bezierCurveTo(this.size * 0.6, -this.size * 0.7, this.size * 0.8, this.size * 0.3, 0, this.size * 0.9);
-        ctx.bezierCurveTo(-this.size * 0.8, this.size * 0.3, -this.size * 0.6, -this.size * 0.7, 0, -this.size * 0.7);
-        ctx.fill();
-
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-        ctx.lineWidth = 0.8;
-        ctx.beginPath();
-        ctx.moveTo(0, -this.size * 0.5);
-        ctx.lineTo(0, this.size * 0.6);
-        ctx.stroke();
+    function animatePetals() {
+      ctx.clearRect(0, 0, width, height);
+      for (let i = 0; i < petals.length; i++) {
+        petals[i].update();
+        petals[i].draw();
       }
-
-      ctx.restore();
+      requestAnimationFrame(animatePetals);
     }
-  }
 
-  for (let i = 0; i < TOTAL_PETALS; i++) {
-    petals.push(new Petal());
+    animatePetals();
   }
-
-  function animatePetals() {
-    ctx.clearRect(0, 0, width, height);
-    for (let i = 0; i < petals.length; i++) {
-      petals[i].update();
-      petals[i].draw();
-    }
-    requestAnimationFrame(animatePetals);
-  }
-
-  animatePetals();
 
   // Initialize page mode & data
   checkModeAndLoad();

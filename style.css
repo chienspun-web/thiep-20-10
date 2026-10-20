@@ -1203,23 +1203,54 @@ body.view-mode .recipient-actions.view-only {
 }
 
 /* ==========================================================================
-   COMMEMORATIVE PHOTO & POLAROID FRAME STYLES
+   PORTRAIT AVATAR & FLYING MEMORY PHOTOS STYLES
    ========================================================================== */
+
+/* Portrait Round Frame in Top Flap */
+.portrait-circle-frame {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff0f5 0%, #ffccd5 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(212, 163, 115, 0.65);
+  box-shadow: 0 8px 22px rgba(230, 73, 128, 0.18);
+  animation: floatBouquet 4s ease-in-out infinite;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.portrait-circle-frame:hover {
+  transform: scale(1.06);
+  box-shadow: 0 10px 28px rgba(230, 73, 128, 0.3);
+}
+
+#card-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
 
 /* Photo Upload in Modal */
 .photo-upload-group {
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .photo-dropzone {
   border: 2px dashed #ffccd5;
   background: #fff8fa;
   border-radius: 14px;
-  padding: 16px 14px;
+  padding: 14px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   cursor: pointer;
   transition: all 0.25s ease;
   text-align: center;
@@ -1232,19 +1263,19 @@ body.view-mode .recipient-actions.view-only {
 }
 
 .photo-dropzone .upload-icon {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   color: var(--primary-rose);
 }
 
 .photo-dropzone .upload-text {
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 700;
   color: var(--deep-rose);
 }
 
 .photo-dropzone .upload-subtext {
-  font-size: 0.76rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 
@@ -1255,26 +1286,27 @@ body.view-mode .recipient-actions.view-only {
   background: #ffffff;
   border: 1.5px solid #ffccd5;
   border-radius: 14px;
-  padding: 10px 14px;
+  padding: 8px 12px;
 }
 
-#preview-img {
-  width: 65px;
-  height: 65px;
+.portrait-thumb {
+  width: 60px;
+  height: 60px;
   object-fit: cover;
-  border-radius: 10px;
+  border-radius: 50% !important;
+  border: 2px solid var(--primary-rose);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .preview-info {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   flex: 1;
 }
 
 .preview-filename {
-  font-size: 0.86rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--deep-rose);
 }
@@ -1287,7 +1319,7 @@ body.view-mode .recipient-actions.view-only {
   background: none;
   border: none;
   color: #e03131;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   padding: 0;
@@ -1300,86 +1332,200 @@ body.view-mode .recipient-actions.view-only {
 }
 
 .btn-remove-photo i {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
 }
 
-/* Polaroid Photo Frame on Top Flap */
-.card-polaroid-wrap {
+/* Memories Multi-Photo Upload */
+.label-with-counter {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  margin: 4px 0;
 }
 
-.polaroid-frame {
+.counter-badge {
+  background: var(--light-blush);
+  color: var(--deep-rose);
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid #ffccd5;
+}
+
+.field-hint {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 2px 0 6px;
+}
+
+.memories-thumbnails-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  padding: 10px;
+  background: #fff2f6;
+  border-radius: 12px;
+}
+
+.memory-thumb-item {
   position: relative;
-  background: #ffffff;
-  padding: 6px 6px 12px 6px;
+  width: 58px;
+  height: 58px;
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(182, 53, 90, 0.22), 0 2px 6px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(212, 163, 115, 0.45);
-  transform: rotate(-1.5deg);
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  border: 1.5px solid #ffffff;
+}
+
+.memory-thumb-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.btn-del-memory {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.9);
+  color: #ffffff;
+  border: none;
+  font-size: 11px;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-.polaroid-frame:hover {
-  transform: rotate(0deg) scale(1.04);
-  box-shadow: 0 12px 30px rgba(182, 53, 90, 0.3);
+.btn-del-memory:hover {
+  background: #b91c1c;
+  transform: scale(1.15);
 }
 
-#card-photo-img {
-  width: 140px;
-  height: 115px;
+/* ==========================================================================
+   FLYING MEMORIES ANIMATION LAYER
+   ========================================================================== */
+.flying-memories-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 150;
+  overflow: hidden;
+}
+
+.flying-polaroid {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(140px, 32vw, 185px);
+  background: #ffffff;
+  padding: 6px 6px 14px 6px;
+  border-radius: 8px;
+  box-shadow: 0 15px 35px rgba(182, 53, 90, 0.3), 0 4px 10px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(212, 163, 115, 0.45);
+  pointer-events: auto;
+  cursor: pointer;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.15);
+  animation: flyMemory 5.4s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.flying-polaroid img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: 4px;
   display: block;
 }
 
-.polaroid-pin {
+.flying-polaroid-pin {
   position: absolute;
-  top: -10px;
+  top: -8px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 1.25rem;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
-  z-index: 2;
+  font-size: 1.15rem;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.25));
 }
 
-.polaroid-zoom-hint {
-  position: absolute;
-  bottom: 16px;
-  right: 10px;
-  background: rgba(30, 10, 18, 0.65);
-  color: #ffffff;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.85;
-  transition: opacity 0.2s ease;
+/* Positions for up to 5 flying memories */
+.flying-polaroid.pos-0 {
+  --fly-x: -270px;
+  --fly-y: -190px;
+  --target-rot: -9deg;
 }
 
-.polaroid-frame:hover .polaroid-zoom-hint {
-  opacity: 1;
+.flying-polaroid.pos-1 {
+  --fly-x: 270px;
+  --fly-y: -180px;
+  --target-rot: 8deg;
 }
 
-.polaroid-zoom-hint i {
-  width: 12px;
-  height: 12px;
+.flying-polaroid.pos-2 {
+  --fly-x: -290px;
+  --fly-y: 80px;
+  --target-rot: 6deg;
 }
 
-.polaroid-caption {
-  font-family: var(--font-cursive);
-  font-size: 1.05rem;
+.flying-polaroid.pos-3 {
+  --fly-x: 290px;
+  --fly-y: 90px;
+  --target-rot: -7deg;
+}
+
+.flying-polaroid.pos-4 {
+  --fly-x: 0px;
+  --fly-y: 260px;
+  --target-rot: 2deg;
+}
+
+@media (max-width: 600px) {
+  .flying-polaroid {
+    width: clamp(115px, 32vw, 140px);
+    padding: 5px 5px 12px 5px;
+  }
+  .flying-polaroid.pos-0 { --fly-x: -95px; --fly-y: -210px; --target-rot: -7deg; }
+  .flying-polaroid.pos-1 { --fly-x: 95px; --fly-y: -200px; --target-rot: 7deg; }
+  .flying-polaroid.pos-2 { --fly-x: -105px; --fly-y: 200px; --target-rot: 5deg; }
+  .flying-polaroid.pos-3 { --fly-x: 105px; --fly-y: 210px; --target-rot: -6deg; }
+  .flying-polaroid.pos-4 { --fly-x: 0px; --fly-y: -10px; --target-rot: 2deg; }
+}
+
+@keyframes flyMemory {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.15) rotate(0deg);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--fly-x, 0px)), calc(-50% + var(--fly-y, 0px))) scale(1) rotate(var(--target-rot, 0deg));
+  }
+  72% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--fly-x, 0px)), calc(-50% + var(--fly-y, 0px) - 6px)) scale(1.02) rotate(var(--target-rot, 0deg));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--fly-x, 0px)), calc(-50% + var(--fly-y, 0px) - 50px)) scale(0.85) rotate(calc(var(--target-rot, 0deg) * 1.3));
+  }
+}
+
+.action-pill-btn.replay-memories-btn {
+  background: linear-gradient(135deg, #fff0f5 0%, #ffd6e0 100%);
+  border-color: var(--primary-rose);
   color: var(--deep-rose);
   font-weight: 700;
-  margin-top: 4px;
-  text-align: center;
-  max-width: 280px;
 }
 
 /* Lightbox Modal for Photo Zoom */

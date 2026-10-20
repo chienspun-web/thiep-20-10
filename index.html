@@ -24,7 +24,7 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <link rel="stylesheet" href="style.css?v=2.3">
+  <link rel="stylesheet" href="style.css?v=3.5">
 </head>
 <body>
   <!-- Petals & Fairy Dust Canvas -->
@@ -64,6 +64,9 @@
       </p>
     </div>
   </aside>
+
+  <!-- Flying Memories Layer (Photos floating and fading when card opens) -->
+  <div class="flying-memories-layer" id="flying-memories-layer"></div>
 
   <!-- Main Container -->
   <main class="main-container">
@@ -146,22 +149,13 @@
                   <span class="art-flourish">❧ ❀ ☙</span>
                 </div>
 
-                <!-- Default Bouquet Artwork (Shown when no photo) -->
-                <div class="left-floral-artwork" id="default-artwork-wrap">
-                  <div class="bouquet-illustration">
-                    <span class="bouquet-emoji">💐</span>
+                <!-- Portrait Circle Frame (Inside Top Flap) -->
+                <div class="left-floral-artwork">
+                  <div class="portrait-circle-frame" id="portrait-circle-frame" title="Chạm để xem ảnh lớn">
+                    <img id="card-portrait-img" src="" alt="Ảnh chân dung" style="display: none;">
+                    <span class="bouquet-emoji" id="card-bouquet-emoji">💐</span>
                   </div>
                   <div class="bouquet-stars">✨ 🌸 ✨</div>
-                </div>
-
-                <!-- Custom Photo Frame (Shown when photo uploaded) -->
-                <div class="card-polaroid-wrap" id="card-photo-wrap" style="display: none;">
-                  <div class="polaroid-frame" id="polaroid-frame" title="Chạm để xem ảnh lớn">
-                    <div class="polaroid-pin">🌸</div>
-                    <img id="card-photo-img" src="" alt="Ảnh kỷ niệm">
-                    <div class="polaroid-zoom-hint"><i data-lucide="maximize-2"></i></div>
-                  </div>
-                  <p class="polaroid-caption" id="card-photo-caption"></p>
                 </div>
 
                 <div class="left-quote-box">
@@ -227,6 +221,10 @@
                 <button class="action-pill-btn heart-btn" id="send-heart-btn" title="Bấm để thả tim">
                   <i data-lucide="heart" class="heart-icon"></i>
                   <span>Thả tim (<span id="heart-count">99</span>)</span>
+                </button>
+                <button class="action-pill-btn replay-memories-btn" id="replay-memories-btn" style="display: none;" title="Xem lại bộ ảnh kỷ niệm bay ra">
+                  <i data-lucide="sparkles"></i>
+                  <span>Xem lại ảnh kỷ niệm 📸</span>
                 </button>
               </div>
 
@@ -359,33 +357,50 @@
           <textarea id="input-poetry" rows="4" placeholder="Nhập các dòng lời chúc ấm áp (mỗi dòng cách nhau 1 lần Enter)..." required></textarea>
         </div>
 
-        <!-- Commemorative Photo Upload Group -->
+        <!-- Feature 1: Portrait Photo in Circle Frame -->
         <div class="form-group photo-upload-group">
-          <label>📸 Ảnh kỷ niệm kèm theo thiệp (Tùy chọn):</label>
+          <label>👤 Ảnh chân dung (Hiển thị trong khung tròn thiệp):</label>
           <div class="photo-upload-container">
-            <input type="file" id="input-photo-file" accept="image/*" style="display: none;">
+            <input type="file" id="input-portrait-file" accept="image/*" style="display: none;">
             
-            <div class="photo-dropzone" id="photo-dropzone">
-              <i data-lucide="image-plus" class="upload-icon"></i>
-              <span class="upload-text">Nhấn để tải ảnh từ máy / điện thoại</span>
-              <span class="upload-subtext">Hỗ trợ JPG, PNG (Tự động nén đẹp & nhanh)</span>
+            <div class="photo-dropzone compact-dropzone" id="portrait-dropzone">
+              <i data-lucide="user-check" class="upload-icon"></i>
+              <span class="upload-text">Chọn ảnh chân dung người nhận</span>
+              <span class="upload-subtext">Ảnh sẽ hiển thị trong khung tròn nắp thiệp</span>
             </div>
 
-            <div class="photo-preview-box" id="photo-preview-box" style="display: none;">
-              <img id="preview-img" src="" alt="Xem trước ảnh">
+            <div class="photo-preview-box" id="portrait-preview-box" style="display: none;">
+              <img id="portrait-preview-img" class="portrait-thumb" src="" alt="Xem trước ảnh chân dung">
               <div class="preview-info">
-                <span class="preview-filename">Ảnh kỷ niệm đã chọn ✨</span>
-                <button type="button" class="btn-remove-photo" id="btn-remove-photo">
-                  <i data-lucide="trash-2"></i> Xóa ảnh
+                <span class="preview-filename">Ảnh chân dung đã chọn ✨</span>
+                <button type="button" class="btn-remove-photo" id="btn-remove-portrait">
+                  <i data-lucide="trash-2"></i> Gỡ ảnh chân dung
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="form-group" id="photo-caption-group" style="display: none;">
-          <label for="input-photo-caption">Lời nhắn / Chú thích bên dưới ảnh:</label>
-          <input type="text" id="input-photo-caption" placeholder="Ví dụ: Nụ cười rạng ngời của em, Kỷ niệm thanh xuân..." maxlength="60">
+        <!-- Feature 2: Flying Memories Photos (Max 5 photos) -->
+        <div class="form-group photo-upload-group">
+          <div class="label-with-counter">
+            <label>📸 Bộ ảnh kỷ niệm bay ra (Tối đa 5 ảnh):</label>
+            <span class="counter-badge" id="memories-counter">0/5 ảnh</span>
+          </div>
+          <p class="field-hint">Khi người nhận mở thiệp, các ảnh này sẽ từ từ bay lượn ra rồi biến mất để lộ bức thư!</p>
+
+          <div class="photo-upload-container">
+            <input type="file" id="input-memories-file" accept="image/*" multiple style="display: none;">
+            
+            <div class="photo-dropzone compact-dropzone" id="memories-dropzone">
+              <i data-lucide="images" class="upload-icon"></i>
+              <span class="upload-text">+ Thêm ảnh kỷ niệm (Chọn 1 hoặc nhiều ảnh)</span>
+              <span class="upload-subtext">Chạm để chọn từ thư viện ảnh (tối đa 5 ảnh)</span>
+            </div>
+
+            <!-- Thumbnails grid for memory photos -->
+            <div class="memories-thumbnails-grid" id="memories-thumbnails-grid" style="display: none;"></div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -446,7 +461,7 @@
   </div>
 
   <!-- Script logic with cache busting -->
-  <script src="script.js?v=2.3"></script>
+  <script src="script.js?v=3.5"></script>
   <script>
     lucide.createIcons();
   </script>
