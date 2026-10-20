@@ -413,6 +413,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (data.sender) displaySender.textContent = data.sender;
 
+    // Reset message scroll to top so full text is always visible from beginning
+    const msgBody = document.getElementById('message-body');
+    if (msgBody) msgBody.scrollTop = 0;
+
     // Feature 1: Handle Portrait photo
     if (data.portrait) {
       currentPortraitBase64 = data.portrait;
@@ -582,6 +586,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       triggerCardOpenCelebration();
       showToast('💌 Chúc mừng ngày Phụ Nữ Việt Nam 20/10!');
+
+      // Reset message scroll to top
+      const msgBody = document.getElementById('message-body');
+      if (msgBody) msgBody.scrollTop = 0;
 
       // Trigger Feature 2: Flying memories floating out
       if (currentMemories && currentMemories.length > 0) {
