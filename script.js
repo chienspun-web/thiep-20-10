@@ -3,6 +3,13 @@
    With Creator Mode (Full Customization) & Recipient Mode (Clean View-Only)
    ========================================================================== */
 
+// ==========================================================================
+// CẤU HÌNH FIREBASE REALTIME DATABASE (ĐỂ TẠO LINK ?id=xxxx SIÊU NGẮN)
+// Bạn chỉ cần dán đường link Realtime Database vào đây
+// Ví dụ: "https://thiep-2010-xyz-default-rtdb.asia-southeast1.firebasedatabase.app"
+// ==========================================================================
+const FIREBASE_DB_URL = "";
+
 document.addEventListener('DOMContentLoaded', () => {
   // DOM Elements
   const cardStage = document.getElementById('card-stage');
@@ -193,6 +200,47 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
+     FIREBASE REALTIME DATABASE HELPERS (REST API)
+     ========================================================================== */
+  function generateShortId(length = 5) {
+    const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  async function saveCardToFirebase(cardData) {
+    if (!FIREBASE_DB_URL || FIREBASE_DB_URL.trim() === '') {
+      return null;
+    }
+    const baseUrl = FIREBASE_DB_URL.replace(/\/+$/, '');
+    const shortId = generateShortId(5);
+    const endpoint = `${baseUrl}/cards/${shortId}.json`;
+
+    const res = await fetch(endpoint, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cardData)
+    });
+
+    if (!res.ok) throw new Error('Firebase save error: ' + res.status);
+    return shortId;
+  }
+
+  async function loadCardFromFirebase(shortId) {
+    if (!FIREBASE_DB_URL || FIREBASE_DB_URL.trim() === '') {
+      return null;
+    }
+    const baseUrl = FIREBASE_DB_URL.replace(/\/+$/, '');
+    const endpoint = `${baseUrl}/cards/${shortId}.json`;
+    const res = await fetch(endpoint);
+    if (!res.ok) return null;
+    return await res.json();
+  }
+
+  /* ==========================================================================
      CHECK VIEW MODE VS CREATOR MODE
      ========================================================================== */
   function checkModeAndLoad() {
@@ -202,6 +250,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (params.get('view') === '1' || params.get('mode') === 'view') {
       isViewMode = true;
       document.body.classList.add('view-mode');
+    }
+
+    // 0. Check Firebase Short ID (?id=k9x2)
+    const shortId = params.get('id');
+    if (shortId) {
+      isViewMode = true;
+      document.body.classList.add('view-mode');
+      displayRecipient.textContent = 'Đang mở thiệp... 🌸';
+
+      loadCardFromFirebase(shortId).then((cardData) => {
+        if (cardData) {
+          applyCardData(cardData);
+        } else {
+          loadCategoryTemplate('friends', 0);
+        }
+      }).catch((err) => {
+        console.warn('Firebase load error:', err);
+        loadCategoryTemplate('friends', 0);
+      });
+      return;
     }
 
     // 1. Template-based compact URL (Siêu ngắn: ?t=crush&to=Lan+Anh&from=Nam&view=1)
@@ -621,7 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Action: Create card and generate share link
   if (btnCreateCard) {
-    btnCreateCard.addEventListener('click', () => {
+    btnCreateCard.addEventListener('click', async () => {
       const prefix = inputPrefix.value.trim() || 'Thân gửi:';
       const recipient = inputRecipient.value.trim();
       const highlight = inputHighlight.value.trim();
@@ -640,7 +708,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Split poetry by newlines and filter empty lines
       const poetryLines = rawPoetry
         ? rawPoetry.split('\n').map(l => l.trim()).filter(l => l.length > 0)
         : [
@@ -660,10 +727,27 @@ document.addEventListener('DOMContentLoaded', () => {
       // 1. Update the card live
       applyCardData(cardData);
 
-      // 2. Build super-compact recipient view URL
-      const compactRecipientUrl = buildCompactShareUrl(cardData);
+      // 2. Try saving to Firebase Realtime Database for super-short link (?id=xxxx)
+      let finalUrl = '';
+      if (FIREBASE_DB_URL && FIREBASE_DB_URL.trim() !== '') {
+        try {
+          showToast('⏳ Đang lưu thiệp và tạo mã ngắn...');
+          const shortId = await saveCardToFirebase(cardData);
+          if (shortId) {
+            const currentUrl = new URL(window.location.href);
+            finalUrl = `${currentUrl.origin}${currentUrl.pathname}?id=${shortId}`;
+          }
+        } catch (err) {
+          console.warn('Firebase save failed, falling back to compact URL:', err);
+        }
+      }
 
-      generatedUrlInput.value = compactRecipientUrl;
+      // 3. Fallback: Compact URL if Firebase not yet configured
+      if (!finalUrl) {
+        finalUrl = buildCompactShareUrl(cardData);
+      }
+
+      generatedUrlInput.value = finalUrl;
       shareResultBox.style.display = 'block';
 
       // Reset shorten button text
