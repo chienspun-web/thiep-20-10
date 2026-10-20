@@ -5,10 +5,8 @@
 
 // ==========================================================================
 // CẤU HÌNH FIREBASE REALTIME DATABASE (ĐỂ TẠO LINK ?id=xxxx SIÊU NGẮN)
-// Bạn chỉ cần dán đường link Realtime Database vào đây
-// Ví dụ: "https://thiep-2010-xyz-default-rtdb.asia-southeast1.firebasedatabase.app"
 // ==========================================================================
-const FIREBASE_DB_URL = "";
+const FIREBASE_DB_URL = "https://snettech-cloud-default-rtdb.firebaseio.com/";
 
 document.addEventListener('DOMContentLoaded', () => {
   // DOM Elements
