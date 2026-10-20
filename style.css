@@ -1509,7 +1509,38 @@ body.view-mode .recipient-actions.view-only {
 }
 
 .result-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
   margin-top: 10px;
+}
+
+.btn-shorten-link {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 1px solid #ffd166;
+  color: #7a5000;
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-shorten-link:hover {
+  background: linear-gradient(135deg, #ffd166 0%, #ffbe0b 100%);
+  color: #4a2800;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 190, 11, 0.25);
+}
+
+.btn-shorten-link i {
+  width: 14px;
+  height: 14px;
+  color: #d48b00;
 }
 
 .btn-preview-link {

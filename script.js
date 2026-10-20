@@ -52,6 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCopyUrl = document.getElementById('btn-copy-url');
   const copyBtnText = document.getElementById('copy-btn-text');
   const btnOpenPreview = document.getElementById('btn-open-preview');
+  const btnShortenUrl = document.getElementById('btn-shorten-url');
+  const shortenBtnText = document.getElementById('shorten-btn-text');
   const templateBtns = document.querySelectorAll('.btn-template');
   
   // Toast
@@ -202,49 +204,103 @@ document.addEventListener('DOMContentLoaded', () => {
       document.body.classList.add('view-mode');
     }
 
-    // Check if encoded card payload is passed
+    // 1. Template-based compact URL (Siêu ngắn: ?t=crush&to=Lan+Anh&from=Nam&view=1)
+    const tplCat = params.get('t');
+    if (tplCat && wishLibrary[tplCat]) {
+      const tplIdx = parseInt(params.get('i') || '0', 10);
+      loadCategoryTemplate(tplCat, tplIdx);
+
+      if (params.has('to')) displayRecipient.textContent = decodeURIComponent(params.get('to'));
+      if (params.has('from')) displaySender.textContent = decodeURIComponent(params.get('from'));
+      if (params.has('pre')) displayPrefix.textContent = decodeURIComponent(params.get('pre'));
+      return;
+    }
+
+    // 2. Custom clean query parameters (?to=...&hl=...&msg=...&view=1)
+    if (params.has('hl') || params.has('msg') || params.has('to')) {
+      const rawMsg = params.get('msg');
+      const customLines = rawMsg
+        ? rawMsg.split('|').map(line => decodeURIComponent(line))
+        : [
+            "🌸 Chúc bạn có một ngày 20/10 thật nhiều ấm áp, niềm vui và hạnh phúc trọn vẹn!",
+            "✨ Chúc bạn luôn xinh đẹp, tự tin tỏa sáng và đạt được mọi ước vọng.",
+            "💖 Cảm ơn vì đã luôn mang lại những điều tuyệt vời cho cuộc sống này!"
+          ];
+
+      const data = {
+        prefix: params.get('pre') ? decodeURIComponent(params.get('pre')) : 'Thân gửi:',
+        recipient: params.get('to') ? decodeURIComponent(params.get('to')) : 'Những Người Phụ Nữ Tuyệt Vời',
+        highlight: params.get('hl') ? `"${decodeURIComponent(params.get('hl'))}"` : undefined,
+        lines: customLines,
+        sender: params.get('from') ? decodeURIComponent(params.get('from')) : 'Người luôn chúc phúc cho bạn ✨'
+      };
+      applyCardData(data);
+      return;
+    }
+
+    // 3. Fallback: Check legacy Base64 ?card=...
     const cardParam = params.get('card');
     if (cardParam) {
       const decoded = decodeCardData(cardParam);
       if (decoded) {
         applyCardData(decoded);
-        // By default, if a custom card payload exists, activate view mode for recipients
-        if (params.get('view') !== '0') {
-          isViewMode = true;
-          document.body.classList.add('view-mode');
-        }
         return;
       }
     }
 
-    // Fallback: check query parameters directly
-    const toName = params.get('to');
-    const fromName = params.get('from');
-    const customHl = params.get('hl');
-    const cat = params.get('cat');
+    // Default: Creator mode with initial template
+    loadCategoryTemplate('friends', 0);
+    syncModalWithCurrentCard();
+  }
 
-    if (toName || fromName || customHl) {
-      const data = {
-        prefix: params.get('prefix') || 'Thân gửi:',
-        recipient: toName ? decodeURIComponent(toName) : 'Bạn Yêu Quý',
-        highlight: customHl ? `"${decodeURIComponent(customHl)}"` : undefined,
-        lines: [
-          "🌸 Chúc bạn có một ngày 20/10 thật nhiều ấm áp, niềm vui và hạnh phúc trọn vẹn!",
-          "✨ Chúc bạn luôn xinh đẹp, tự tin tỏa sáng và đạt được mọi ước vọng.",
-          "💖 Cảm ơn vì đã luôn mang lại những điều tuyệt vời cho cuộc sống này!"
-        ],
-        sender: fromName ? decodeURIComponent(fromName) : 'Người luôn chúc phúc cho bạn ✨'
-      };
-      applyCardData(data);
-      if (params.get('view') === '1') {
-        isViewMode = true;
-        document.body.classList.add('view-mode');
+  function findMatchingPreset(prefix, highlight, lines) {
+    const cleanHl = highlight.replace(/^"|"$/g, '').trim();
+    for (const cat of ['friends', 'crush', 'family', 'colleague']) {
+      const list = wishLibrary[cat];
+      for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        const itemHl = item.highlight.replace(/^"|"$/g, '').trim();
+        if (itemHl === cleanHl && JSON.stringify(item.lines) === JSON.stringify(lines)) {
+          return { cat, index: i };
+        }
+      }
+    }
+    return null;
+  }
+
+  function buildCompactShareUrl(cardData) {
+    const currentUrl = new URL(window.location.href);
+    const url = new URL(currentUrl.origin + currentUrl.pathname);
+
+    // Check if card matches any standard preset
+    const match = findMatchingPreset(cardData.prefix, cardData.highlight, cardData.lines);
+
+    if (match) {
+      // Super short preset link (~60 characters)
+      url.searchParams.set('t', match.cat);
+      if (match.index > 0) url.searchParams.set('i', match.index.toString());
+      url.searchParams.set('to', cardData.recipient);
+      if (cardData.sender && cardData.sender !== 'Người luôn chúc phúc cho bạn ✨') {
+        url.searchParams.set('from', cardData.sender);
+      }
+      if (cardData.prefix && cardData.prefix !== 'Thân gửi:') {
+        url.searchParams.set('pre', cardData.prefix);
       }
     } else {
-      // Default: Creator mode with initial template
-      loadCategoryTemplate('friends', 0);
-      syncModalWithCurrentCard();
+      // Clean query parameters (much shorter than Base64)
+      url.searchParams.set('to', cardData.recipient);
+      if (cardData.sender && cardData.sender !== 'Người luôn chúc phúc cho bạn ✨') {
+        url.searchParams.set('from', cardData.sender);
+      }
+      if (cardData.prefix && cardData.prefix !== 'Thân gửi:') {
+        url.searchParams.set('pre', cardData.prefix);
+      }
+      url.searchParams.set('hl', cardData.highlight.replace(/^"|"$/g, ''));
+      url.searchParams.set('msg', cardData.lines.join('|'));
     }
+
+    url.searchParams.set('view', '1');
+    return url.toString();
   }
 
   function applyCardData(data) {
@@ -604,20 +660,59 @@ document.addEventListener('DOMContentLoaded', () => {
       // 1. Update the card live
       applyCardData(cardData);
 
-      // 2. Encode to Base64
-      const encodedPayload = encodeCardData(cardData);
+      // 2. Build super-compact recipient view URL
+      const compactRecipientUrl = buildCompactShareUrl(cardData);
 
-      // 3. Build recipient view URL
-      const currentUrl = new URL(window.location.href);
-      const recipientUrl = `${currentUrl.origin}${currentUrl.pathname}?card=${encodedPayload}&view=1`;
-
-      generatedUrlInput.value = recipientUrl;
+      generatedUrlInput.value = compactRecipientUrl;
       shareResultBox.style.display = 'block';
+
+      // Reset shorten button text
+      if (shortenBtnText) shortenBtnText.textContent = 'Rút gọn link siêu ngắn';
 
       // Auto open card to let creator admire their custom work
       toggleCard(true);
 
       showToast('✨ Đã tạo link thành công! Bấm sao chép để gửi ngay.');
+    });
+  }
+
+  // 1-Click Shorten URL via is.gd API
+  if (btnShortenUrl) {
+    btnShortenUrl.addEventListener('click', async () => {
+      const currentLink = generatedUrlInput.value.trim();
+      if (!currentLink) return;
+
+      if (currentLink.includes('is.gd') || currentLink.includes('tinyurl')) {
+        showToast('✨ Đường link này đã ở dạng rút gọn rồi!');
+        return;
+      }
+
+      // Check if testing on localhost
+      if (currentLink.includes('localhost') || currentLink.includes('127.0.0.1')) {
+        showToast('💡 Link hiện tại đã rất gọn (~60 ký tự)! Khi đưa lên GitHub Pages, nút này sẽ rút gọn về https://is.gd/xxx siêu ngắn nhé.');
+        return;
+      }
+
+      if (shortenBtnText) shortenBtnText.textContent = 'Đang rút gọn...';
+
+      try {
+        const apiUrl = `https://is.gd/create.php?format=simple&url=${encodeURIComponent(currentLink)}`;
+        const res = await fetch(apiUrl);
+        if (!res.ok) throw new Error('API Shorten error');
+        const shortUrl = await res.text();
+        
+        if (shortUrl.startsWith('http')) {
+          generatedUrlInput.value = shortUrl.trim();
+          if (shortenBtnText) shortenBtnText.textContent = 'Đã rút gọn!';
+          showToast('⚡ Đã rút gọn link thành công!');
+        } else {
+          throw new Error(shortUrl);
+        }
+      } catch (err) {
+        console.warn('Shorten API error:', err);
+        if (shortenBtnText) shortenBtnText.textContent = 'Rút gọn link';
+        showToast('💡 Link gốc của bạn đã rất ngắn gọn và sẵn sàng để gửi!');
+      }
     });
   }
 
