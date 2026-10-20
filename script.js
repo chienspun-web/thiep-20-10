@@ -61,9 +61,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const shortenBtnText = document.getElementById('shorten-btn-text');
   const templateBtns = document.querySelectorAll('.btn-template');
   
-  // Toast
-  const toastNotify = document.getElementById('toast-notify');
-  const toastText = document.getElementById('toast-text');
+  // Commemorative Photo Elements
+  const defaultArtworkWrap = document.getElementById('default-artwork-wrap');
+  const cardPhotoWrap = document.getElementById('card-photo-wrap');
+  const cardPhotoImg = document.getElementById('card-photo-img');
+  const cardPhotoCaption = document.getElementById('card-photo-caption');
+  const polaroidFrame = document.getElementById('polaroid-frame');
+  const inputPhotoFile = document.getElementById('input-photo-file');
+  const photoDropzone = document.getElementById('photo-dropzone');
+  const photoPreviewBox = document.getElementById('photo-preview-box');
+  const previewImg = document.getElementById('preview-img');
+  const btnRemovePhoto = document.getElementById('btn-remove-photo');
+  const photoCaptionGroup = document.getElementById('photo-caption-group');
+  const inputPhotoCaption = document.getElementById('input-photo-caption');
+  const lightboxModal = document.getElementById('lightbox-modal');
+  const lightboxImg = document.getElementById('lightbox-img');
+  const lightboxCaption = document.getElementById('lightbox-caption');
+  const lightboxClose = document.getElementById('lightbox-close');
 
   // Application State
   let isCardOpen = false;
@@ -72,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentWishIndex = 0;
   let totalHearts = 99;
   let isViewMode = false;
+  let currentPhotoBase64 = null;
 
   /* ==========================================================================
      CURATED WISHES DATABASE
@@ -195,6 +210,47 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('Decoding error:', e);
       return null;
     }
+  }
+
+  /* ==========================================================================
+     IMAGE RESIZING & COMPRESSION HELPER (CANVAS)
+     ========================================================================== */
+  function compressImageFile(file, maxWidth = 800, maxHeight = 800, quality = 0.78) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const base64 = canvas.toDataURL('image/jpeg', quality);
+          resolve(base64);
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
 
   /* ==========================================================================
@@ -377,6 +433,31 @@ document.addEventListener('DOMContentLoaded', () => {
       wishPoetry.innerHTML = data.lines.map(line => `<p>${line}</p>`).join('');
     }
     if (data.sender) displaySender.textContent = data.sender;
+
+    // Handle commemorative photo
+    if (data.photo) {
+      currentPhotoBase64 = data.photo;
+      if (cardPhotoImg) cardPhotoImg.src = data.photo;
+      if (cardPhotoCaption) cardPhotoCaption.textContent = data.photoCaption || '';
+      if (cardPhotoWrap) cardPhotoWrap.style.display = 'flex';
+      if (defaultArtworkWrap) defaultArtworkWrap.style.display = 'none';
+
+      // Sync modal photo preview
+      if (previewImg) previewImg.src = data.photo;
+      if (photoPreviewBox) photoPreviewBox.style.display = 'flex';
+      if (photoDropzone) photoDropzone.style.display = 'none';
+      if (photoCaptionGroup) photoCaptionGroup.style.display = 'flex';
+      if (inputPhotoCaption) inputPhotoCaption.value = data.photoCaption || '';
+    } else {
+      currentPhotoBase64 = null;
+      if (cardPhotoWrap) cardPhotoWrap.style.display = 'none';
+      if (defaultArtworkWrap) defaultArtworkWrap.style.display = 'flex';
+      if (cardPhotoCaption) cardPhotoCaption.textContent = '';
+
+      if (photoPreviewBox) photoPreviewBox.style.display = 'none';
+      if (photoDropzone) photoDropzone.style.display = 'flex';
+      if (photoCaptionGroup) photoCaptionGroup.style.display = 'none';
+    }
 
     // Sync input fields in modal if in creator mode
     if (inputPrefix && data.prefix) inputPrefix.value = data.prefix;
@@ -719,7 +800,9 @@ document.addEventListener('DOMContentLoaded', () => {
         recipient: recipient,
         highlight: `"${highlight}"`,
         lines: poetryLines,
-        sender: sender
+        sender: sender,
+        photo: currentPhotoBase64 || null,
+        photoCaption: inputPhotoCaption ? inputPhotoCaption.value.trim() : ''
       };
 
       // 1. Update the card live
@@ -844,6 +927,103 @@ document.addEventListener('DOMContentLoaded', () => {
   if (shareLinkBtn) {
     shareLinkBtn.addEventListener('click', () => {
       openModal();
+    });
+  }
+
+  /* ==========================================================================
+     COMMEMORATIVE PHOTO UPLOAD & LIGHTBOX ZOOM HANDLERS
+     ========================================================================== */
+  if (photoDropzone && inputPhotoFile) {
+    photoDropzone.addEventListener('click', () => {
+      inputPhotoFile.click();
+    });
+
+    inputPhotoFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        showToast('⚠️ Vui lòng chọn tệp hình ảnh!');
+        return;
+      }
+
+      try {
+        showToast('⏳ Đang tối ưu hình ảnh...');
+        const base64 = await compressImageFile(file, 800, 800, 0.78);
+        currentPhotoBase64 = base64;
+
+        // Preview in modal
+        if (previewImg) previewImg.src = base64;
+        if (photoPreviewBox) photoPreviewBox.style.display = 'flex';
+        if (photoDropzone) photoDropzone.style.display = 'none';
+        if (photoCaptionGroup) photoCaptionGroup.style.display = 'flex';
+
+        // Update live card
+        if (cardPhotoImg) cardPhotoImg.src = base64;
+        if (cardPhotoWrap) cardPhotoWrap.style.display = 'flex';
+        if (defaultArtworkWrap) defaultArtworkWrap.style.display = 'none';
+
+        // Sync caption
+        const caption = inputPhotoCaption ? inputPhotoCaption.value.trim() : '';
+        if (cardPhotoCaption) cardPhotoCaption.textContent = caption;
+
+        showToast('📸 Đã thêm ảnh kỷ niệm vào thiệp!');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      } catch (err) {
+        console.error('Image compression error:', err);
+        showToast('❌ Không thể tải ảnh, vui lòng thử ảnh khác!');
+      }
+    });
+  }
+
+  // Live photo caption update
+  if (inputPhotoCaption && cardPhotoCaption) {
+    inputPhotoCaption.addEventListener('input', () => {
+      cardPhotoCaption.textContent = inputPhotoCaption.value.trim();
+    });
+  }
+
+  // Remove photo button
+  if (btnRemovePhoto) {
+    btnRemovePhoto.addEventListener('click', () => {
+      currentPhotoBase64 = null;
+      if (inputPhotoFile) inputPhotoFile.value = '';
+      if (photoPreviewBox) photoPreviewBox.style.display = 'none';
+      if (photoDropzone) photoDropzone.style.display = 'flex';
+      if (photoCaptionGroup) photoCaptionGroup.style.display = 'none';
+      if (inputPhotoCaption) inputPhotoCaption.value = '';
+
+      if (cardPhotoWrap) cardPhotoWrap.style.display = 'none';
+      if (defaultArtworkWrap) defaultArtworkWrap.style.display = 'flex';
+      if (cardPhotoCaption) cardPhotoCaption.textContent = '';
+      showToast('🗑️ Đã gỡ ảnh kỷ niệm');
+    });
+  }
+
+  // Lightbox Zoom on clicking the photo in the card
+  if (polaroidFrame) {
+    polaroidFrame.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!currentPhotoBase64) return;
+      if (lightboxImg) lightboxImg.src = currentPhotoBase64;
+      if (lightboxCaption && cardPhotoCaption) {
+        lightboxCaption.textContent = cardPhotoCaption.textContent;
+      }
+      if (lightboxModal) lightboxModal.classList.add('active');
+    });
+  }
+
+  if (lightboxClose) {
+    lightboxClose.addEventListener('click', () => {
+      if (lightboxModal) lightboxModal.classList.remove('active');
+    });
+  }
+
+  if (lightboxModal) {
+    lightboxModal.addEventListener('click', (e) => {
+      if (e.target === lightboxModal) {
+        lightboxModal.classList.remove('active');
+      }
     });
   }
 

@@ -24,7 +24,7 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <link rel="stylesheet" href="style.css?v=2.2">
+  <link rel="stylesheet" href="style.css?v=2.3">
 </head>
 <body>
   <!-- Petals & Fairy Dust Canvas -->
@@ -146,11 +146,22 @@
                   <span class="art-flourish">❧ ❀ ☙</span>
                 </div>
 
-                <div class="left-floral-artwork">
+                <!-- Default Bouquet Artwork (Shown when no photo) -->
+                <div class="left-floral-artwork" id="default-artwork-wrap">
                   <div class="bouquet-illustration">
                     <span class="bouquet-emoji">💐</span>
                   </div>
                   <div class="bouquet-stars">✨ 🌸 ✨</div>
+                </div>
+
+                <!-- Custom Photo Frame (Shown when photo uploaded) -->
+                <div class="card-polaroid-wrap" id="card-photo-wrap" style="display: none;">
+                  <div class="polaroid-frame" id="polaroid-frame" title="Chạm để xem ảnh lớn">
+                    <div class="polaroid-pin">🌸</div>
+                    <img id="card-photo-img" src="" alt="Ảnh kỷ niệm">
+                    <div class="polaroid-zoom-hint"><i data-lucide="maximize-2"></i></div>
+                  </div>
+                  <p class="polaroid-caption" id="card-photo-caption"></p>
                 </div>
 
                 <div class="left-quote-box">
@@ -348,6 +359,35 @@
           <textarea id="input-poetry" rows="4" placeholder="Nhập các dòng lời chúc ấm áp (mỗi dòng cách nhau 1 lần Enter)..." required></textarea>
         </div>
 
+        <!-- Commemorative Photo Upload Group -->
+        <div class="form-group photo-upload-group">
+          <label>📸 Ảnh kỷ niệm kèm theo thiệp (Tùy chọn):</label>
+          <div class="photo-upload-container">
+            <input type="file" id="input-photo-file" accept="image/*" style="display: none;">
+            
+            <div class="photo-dropzone" id="photo-dropzone">
+              <i data-lucide="image-plus" class="upload-icon"></i>
+              <span class="upload-text">Nhấn để tải ảnh từ máy / điện thoại</span>
+              <span class="upload-subtext">Hỗ trợ JPG, PNG (Tự động nén đẹp & nhanh)</span>
+            </div>
+
+            <div class="photo-preview-box" id="photo-preview-box" style="display: none;">
+              <img id="preview-img" src="" alt="Xem trước ảnh">
+              <div class="preview-info">
+                <span class="preview-filename">Ảnh kỷ niệm đã chọn ✨</span>
+                <button type="button" class="btn-remove-photo" id="btn-remove-photo">
+                  <i data-lucide="trash-2"></i> Xóa ảnh
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group" id="photo-caption-group" style="display: none;">
+          <label for="input-photo-caption">Lời nhắn / Chú thích bên dưới ảnh:</label>
+          <input type="text" id="input-photo-caption" placeholder="Ví dụ: Nụ cười rạng ngời của em, Kỷ niệm thanh xuân..." maxlength="60">
+        </div>
+
         <div class="form-group">
           <label for="input-sender">Tên người gửi (Chữ ký):</label>
           <input type="text" id="input-sender" placeholder="Ví dụ: Hoàng Nam, Một người bạn thân..." maxlength="40">
@@ -390,6 +430,15 @@
     </div>
   </div>
 
+  <!-- Lightbox Modal for Photo Zoom -->
+  <div class="lightbox-overlay" id="lightbox-modal">
+    <div class="lightbox-content">
+      <button class="lightbox-close" id="lightbox-close" aria-label="Đóng">&times;</button>
+      <img id="lightbox-img" src="" alt="Ảnh kỷ niệm đầy đủ">
+      <p class="lightbox-caption" id="lightbox-caption"></p>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div class="toast-notification" id="toast-notify">
     <span class="toast-icon">✨</span>
@@ -397,7 +446,7 @@
   </div>
 
   <!-- Script logic with cache busting -->
-  <script src="script.js?v=2.2"></script>
+  <script src="script.js?v=2.3"></script>
   <script>
     lucide.createIcons();
   </script>
