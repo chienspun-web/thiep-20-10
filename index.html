@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Chúc Mừng Ngày Phụ Nữ Việt Nam 20/10 🌸</title>
+  
+  <!-- Meta tags for social sharing -->
+  <meta name="description" content="Tấm thiệp hoa ngát hương gửi trọn yêu thương và những lời chúc tốt đẹp nhất nhân ngày Phụ nữ Việt Nam 20/10.">
+  <meta property="og:title" content="Món Quà 20/10 Dành Riêng Cho Bạn 💖">
+  <meta property="og:description" content="Chạm để mở tấm thiệp hoa ngát hương và nhận những lời chúc ấm áp nhất!">
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Great+Vibes&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Petals & Fairy Dust Canvas -->
+  <canvas id="petals-canvas"></canvas>
+
+  <!-- Ambient Floral Glow Background Elements -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <!-- Background Music Player -->
+  <div class="audio-control-wrap">
+    <button id="music-toggle" class="music-btn" title="Bật/Tắt Nhạc Nền" aria-label="Bật/Tắt Nhạc Nền">
+      <div class="music-disc" id="music-disc">
+        <i data-lucide="music" class="music-icon"></i>
+      </div>
+      <span class="music-hint" id="music-hint">Giai điệu dịu êm</span>
+    </button>
+    <audio id="bg-audio" loop preload="auto">
+      <source src="https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3" type="audio/mp3">
+      <source src="https://cdn.pixabay.com/download/audio/2022/05/16/audio_c5b59781cb.mp3?filename=tender-piano-108744.mp3" type="audio/mp3">
+    </audio>
+  </div>
+
+  <!-- Decorative Corner Floral Branches -->
+  <div class="floral-corner top-left"></div>
+  <div class="floral-corner top-right"></div>
+  <div class="floral-corner bottom-left"></div>
+  <div class="floral-corner bottom-right"></div>
+
+  <!-- Creator Mode Notice Banner (Visible only in Creator Mode) -->
+  <aside class="creator-banner creator-only" id="creator-banner">
+    <div class="creator-banner-inner">
+      <span class="banner-badge">Chế độ tạo thiệp</span>
+      <p class="banner-text">
+        ✨ Bạn có thể tự do chỉnh sửa thông tin người nhận & từng dòng lời chúc, sau đó nhấn <strong>"Chia sẻ link thiệp"</strong> để gửi tặng. Người nhận sẽ chỉ thấy thiệp và lời chúc mà không thấy các nút chỉnh sửa!
+      </p>
+    </div>
+  </aside>
+
+  <!-- Main Container -->
+  <main class="main-container">
+    
+    <!-- Hero Header / Landing Intro -->
+    <header class="hero-header" id="hero-header">
+      <div class="event-badge">
+        <span class="badge-sparkle">✨</span>
+        <span>20 Tháng 10 • Ngày Phụ Nữ Việt Nam</span>
+        <span class="badge-sparkle">✨</span>
+      </div>
+      <h1 class="hero-title">Trao Gửi Yêu Thương</h1>
+      <p class="hero-subtitle" id="hero-subtitle">
+        Dành tặng những người phụ nữ tuyệt vời nhất ngàn đóa hoa rực rỡ và muôn lời chúc ngọt ngào nhất
+      </p>
+    </header>
+
+    <!-- Card 3D Stage -->
+    <div class="card-stage" id="card-stage">
+      
+      <!-- Greeting Card 3D Bi-Fold Component -->
+      <div class="greeting-card-wrapper" id="card-wrapper">
+        <div class="greeting-card" id="greeting-card">
+          
+          <!-- FOLDING FLAP (The Cover that swings open) -->
+          <div class="card-flap" id="card-flap">
+            
+            <!-- Flap Front: Closed Cover Face -->
+            <div class="flap-side flap-front" id="flap-front">
+              <div class="cover-inner">
+                <div class="gold-emboss-border"></div>
+                <div class="cover-floral-bg"></div>
+
+                <!-- Floral Garland Wreath -->
+                <div class="cover-wreath">
+                  <svg viewBox="0 0 220 220" class="wreath-svg">
+                    <circle cx="110" cy="110" r="92" fill="none" stroke="rgba(235, 120, 150, 0.35)" stroke-width="2" stroke-dasharray="4 6"/>
+                    <circle cx="110" cy="110" r="100" fill="none" stroke="rgba(212, 163, 115, 0.55)" stroke-width="1.5"/>
+                    <circle cx="110" cy="10" r="7" fill="#ff758f"/>
+                    <circle cx="210" cy="110" r="7" fill="#ff758f"/>
+                    <circle cx="110" cy="210" r="7" fill="#ff758f"/>
+                    <circle cx="10" cy="110" r="7" fill="#ff758f"/>
+                    <circle cx="39" cy="39" r="5" fill="#f783ac"/>
+                    <circle cx="181" cy="39" r="5" fill="#f783ac"/>
+                    <circle cx="181" cy="181" r="5" fill="#f783ac"/>
+                    <circle cx="39" cy="181" r="5" fill="#f783ac"/>
+                  </svg>
+
+                  <div class="cover-center-badge">
+                    <span class="sub-text">CHÚC MỪNG</span>
+                    <span class="big-date">20.10</span>
+                    <span class="sub-tag">HAPPY WOMEN'S DAY</span>
+                  </div>
+                </div>
+
+                <!-- Wax Seal / Open Button -->
+                <div class="seal-container">
+                  <div class="wax-seal" id="wax-seal" title="Chạm để mở thiệp">
+                    <div class="wax-seal-inner">
+                      <span class="seal-icon">🌸</span>
+                    </div>
+                    <div class="seal-ripple"></div>
+                  </div>
+                  <div class="seal-prompt">Chạm vào con dấu hoặc nút bên dưới để mở thiệp</div>
+                </div>
+
+                <!-- Bottom ribbon decor -->
+                <div class="cover-ribbon">
+                  <span>💐 Gửi Trọn Yêu Thương 💐</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Flap Back: Left Inside Page (Visible when opened) -->
+            <div class="flap-side flap-back" id="flap-back">
+              <div class="inside-left-inner">
+                <div class="gold-emboss-border"></div>
+                
+                <div class="left-art-header">
+                  <span class="art-flourish">❧ ❀ ☙</span>
+                </div>
+
+                <div class="left-floral-artwork">
+                  <div class="bouquet-illustration">
+                    <span class="bouquet-emoji">💐</span>
+                  </div>
+                  <div class="bouquet-stars">✨ 🌸 ✨</div>
+                </div>
+
+                <div class="left-quote-box">
+                  <p class="quote-text">
+                    "Mỗi người phụ nữ là một đóa hoa độc nhất vô nhị, mang hương sắc riêng tô thắm cho cuộc đời."
+                  </p>
+                  <span class="quote-author">— Happy Vietnamese Women's Day —</span>
+                </div>
+
+                <div class="left-bottom-decor">
+                  <div class="decorative-ribbon-tag">
+                    <span>Mãi Rạng Ngời & Hạnh Phúc</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div> <!-- /card-flap -->
+
+          <!-- BASE PAGE: Right Inside Page (The Letter & Wishes) -->
+          <div class="card-base" id="card-base">
+            <div class="card-inside-inner">
+              
+              <div class="inside-decor-top">
+                <span class="inside-flourish">❧ Chúc Mừng 20/10 ☙</span>
+              </div>
+
+              <!-- Recipient Salutation -->
+              <div class="recipient-box">
+                <span class="greeting-prefix" id="display-prefix">Thân gửi:</span>
+                <span class="recipient-name" id="display-recipient">Những Người Phụ Nữ Tuyệt Vời</span>
+                <button class="edit-name-btn creator-only" id="quick-edit-name" title="Chỉnh sửa thông tin thiệp">
+                  <i data-lucide="edit-3"></i>
+                </button>
+              </div>
+
+              <!-- Main Greeting Message (Dynamic) -->
+              <div class="message-body" id="message-body">
+                <p class="wish-highlight" id="wish-highlight">
+                  "Nhân ngày Phụ nữ Việt Nam 20/10, chúc bạn luôn xinh đẹp rạng rỡ như những đóa hồng ban mai, nụ cười luôn nở trên môi và ngập tràn hạnh phúc mỗi ngày!"
+                </p>
+                <div class="wish-poetry" id="wish-poetry">
+                  <p>🌸 Chúc bạn có một ngày 20/10 thật trọn vẹn, ấm áp bên gia đình và những người thân yêu.</p>
+                  <p>✨ Chúc mọi ước mơ của bạn đều sớm thành hiện thực, luôn tự tin tỏa sáng và được yêu thương theo cách đặc biệt nhất.</p>
+                  <p>💖 Cảm ơn bạn vì đã xuất hiện và mang đến thế giới này những điều thật dịu dàng!</p>
+                </div>
+              </div>
+
+              <!-- Card Signature / Sender -->
+              <div class="card-footer-info">
+                <div class="signature-line">
+                  <span class="sender-label">From:</span>
+                  <span class="sender-name" id="display-sender">Người luôn chúc phúc cho bạn ✨</span>
+                </div>
+              </div>
+
+              <!-- Card Interactive Inside Actions -->
+              <div class="inside-actions">
+                <button class="action-pill-btn creator-only" id="next-wish-btn" title="Đổi câu chúc mẫu khác">
+                  <i data-lucide="sparkles"></i>
+                  <span>Đổi lời chúc khác</span>
+                </button>
+                <button class="action-pill-btn heart-btn" id="send-heart-btn" title="Bấm để thả tim">
+                  <i data-lucide="heart" class="heart-icon"></i>
+                  <span>Thả tim (<span id="heart-count">99</span>)</span>
+                </button>
+              </div>
+
+            </div>
+          </div> <!-- /card-base -->
+
+        </div> <!-- /greeting-card -->
+      </div> <!-- /greeting-card-wrapper -->
+
+    </div> <!-- /card-stage -->
+
+    <!-- Main Trigger Button Below Stage -->
+    <div class="action-section">
+      <button class="open-card-btn" id="open-card-trigger">
+        <span class="btn-glow"></span>
+        <span class="btn-icon">💌</span>
+        <span class="btn-text" id="open-btn-text">MỞ THIỆP CHÚC MỪNG</span>
+        <span class="btn-arrow">→</span>
+      </button>
+
+      <!-- Secondary Controls & Personalization (Creator Only) -->
+      <div class="tool-actions creator-only" id="creator-tool-actions">
+        <button class="tool-btn highlight-btn" id="open-customize-modal">
+          <i data-lucide="edit-3"></i>
+          <span>Tùy chỉnh thông tin & nội dung thiệp</span>
+        </button>
+        <button class="tool-btn" id="share-link-btn">
+          <i data-lucide="share-2"></i>
+          <span>Chia sẻ link gửi bạn bè (Chỉ xem)</span>
+        </button>
+        <button class="tool-btn" id="burst-flowers-btn">
+          <i data-lucide="flower-2"></i>
+          <span>Thả mưa hoa</span>
+        </button>
+      </div>
+
+      <!-- Recipient Interactive Controls (Shown in View Mode) -->
+      <div class="recipient-actions view-only" id="recipient-actions" style="display: none;">
+        <button class="tool-btn" id="recipient-burst-btn">
+          <i data-lucide="flower-2"></i>
+          <span>Thả mưa hoa chúc mừng 🌸</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Category Wish Selector Bar (Creator Only) -->
+    <section class="wish-categories creator-only" id="wish-categories">
+      <h3 class="categories-title">✨ Chọn nhanh mẫu lời chúc theo đối tượng ✨</h3>
+      <div class="category-chips">
+        <button class="category-chip active" data-category="friends">
+          👭 Bạn Bè / Bạn Thân
+        </button>
+        <button class="category-chip" data-category="crush">
+          🌹 Người Yêu / Vợ
+        </button>
+        <button class="category-chip" data-category="family">
+          🏡 Mẹ & Chị Em Gái
+        </button>
+        <button class="category-chip" data-category="colleague">
+          💼 Đồng Nghiệp & Đối Tác
+        </button>
+      </div>
+    </section>
+
+    <!-- Meaning of 20/10 Section -->
+    <section class="meaning-section">
+      <div class="meaning-card">
+        <div class="meaning-icon">💐</div>
+        <div class="meaning-text">
+          <h3>20 Tháng 10 - Tôn Vinh Vẻ Đẹp & Bản Lĩnh</h3>
+          <p>
+            Phụ nữ sinh ra là để được yêu thương, trân trọng và nâng niu. Dù ở bất kỳ cương vị nào, các chị em đều là những đóa hoa rạng rỡ nhất, mang lại hơi ấm và nguồn cảm hứng bất tận cho cuộc đời!
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>🌸 Trao trọn yêu thương nhân ngày Phụ Nữ Việt Nam 20.10 🌸</p>
+      <p class="copyright">Made with love • Dành tặng tất cả những người phụ nữ tuyệt vời</p>
+    </footer>
+
+  </main>
+
+  <!-- Modal: Personalize & Share -->
+  <div class="modal-overlay creator-only" id="customize-modal">
+    <div class="modal-box">
+      <button class="modal-close" id="modal-close" aria-label="Đóng">&times;</button>
+      
+      <div class="modal-header">
+        <div class="modal-flower">🌸</div>
+        <h3 class="modal-title">Tùy Chỉnh Thiệp 20/10</h3>
+        <p class="modal-subtitle">
+          Chỉnh sửa thông tin và nội dung lời chúc theo ý muốn. Khi chia sẻ, người nhận sẽ chỉ thấy thiệp mà <strong>không</strong> thấy các nút chỉnh sửa!
+        </p>
+      </div>
+
+      <!-- Quick Template Selector inside modal -->
+      <div class="modal-template-selector">
+        <span class="template-label">Gợi ý mẫu nhanh:</span>
+        <div class="template-buttons">
+          <button type="button" class="btn-template" data-tpl="friends">Bạn bè</button>
+          <button type="button" class="btn-template" data-tpl="crush">Người yêu</button>
+          <button type="button" class="btn-template" data-tpl="family">Mẹ/Chị</button>
+          <button type="button" class="btn-template" data-tpl="colleague">Đồng nghiệp</button>
+        </div>
+      </div>
+
+      <form id="customize-form" class="modal-form" onsubmit="return false;">
+        
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="input-prefix">Danh xưng:</label>
+            <input type="text" id="input-prefix" value="Thân gửi:" placeholder="Ví dụ: Thân gửi, Gửi em yêu, Kính gửi Mẹ..." maxlength="25">
+          </div>
+          <div class="form-group flex-2">
+            <label for="input-recipient">Tên người nhận (*):</label>
+            <input type="text" id="input-recipient" placeholder="Ví dụ: Lan Anh, Mẹ kính yêu, Bé Thỏ..." maxlength="40" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="input-highlight">Lời chúc chính / Câu nói nổi bật (*):</label>
+          <textarea id="input-highlight" rows="2" placeholder="Nhập câu chúc trọng tâm mở đầu bức thiệp..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="input-poetry">Nội dung chi tiết / Lời nhắn nhủ gửi trao (*):</label>
+          <textarea id="input-poetry" rows="4" placeholder="Nhập các dòng lời chúc ấm áp (mỗi dòng cách nhau 1 lần Enter)..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="input-sender">Tên người gửi (Chữ ký):</label>
+          <input type="text" id="input-sender" placeholder="Ví dụ: Hoàng Nam, Một người bạn thân..." maxlength="40">
+        </div>
+
+        <div class="modal-buttons">
+          <button type="button" class="btn-primary" id="btn-create-card">
+            <i data-lucide="share-2"></i>
+            Tạo & Lấy Link Gửi Bạn Bè
+          </button>
+        </div>
+      </form>
+
+      <!-- Share Link Result Box -->
+      <div class="share-result-box" id="share-result-box" style="display: none;">
+        <div class="result-badge">✨ Link người nhận đã sẵn sàng!</div>
+        <label>Đường link thiệp chỉ dành cho người nhận:</label>
+        <div class="copy-input-row">
+          <input type="text" id="generated-url" readonly>
+          <button class="copy-btn" id="btn-copy-url">
+            <i data-lucide="copy"></i>
+            <span id="copy-btn-text">Sao chép link</span>
+          </button>
+        </div>
+        <div class="result-actions">
+          <button type="button" class="btn-preview-link" id="btn-open-preview">
+            <i data-lucide="external-link"></i>
+            Mở xem thử giao diện người nhận
+          </button>
+        </div>
+        <p class="copy-hint">
+          🔒 <strong>Bảo đảm riêng tư:</strong> Khi người nhận mở link này, họ sẽ chỉ thấy tấm thiệp mở ra cùng lời chúc của bạn, hoàn toàn <strong>không</strong> hiển thị các nút chỉnh sửa!
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-notification" id="toast-notify">
+    <span class="toast-icon">✨</span>
+    <span class="toast-message" id="toast-text">Đã sao chép liên kết thành công!</span>
+  </div>
+
+  <!-- Script logic -->
+  <script src="script.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
